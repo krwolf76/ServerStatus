@@ -1,7 +1,7 @@
 # Server Status
 ![image](https://i.imgur.com/3tkAFFz.png")
 
-##Config
+## Config
 ```
 {
   "Discord WebHook": "",
