@@ -5,7 +5,7 @@
 ## Requires
 https://umod.org/plugins/discord-messages
 
-## Config
+## Configuration
 ```
 {
   "Discord WebHook": "",
