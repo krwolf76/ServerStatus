@@ -1,5 +1,5 @@
 # Server Status
-[image]!(https://i.imgur.com/3tkAFFz.png")
+![image](https://i.imgur.com/3tkAFFz.png")
 
 ```
 {
