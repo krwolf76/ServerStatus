@@ -72,7 +72,7 @@ namespace Oxide.Plugins
         private class Configuration
         {
             [JsonProperty("Discord WebHook")]
-            public string webhook { get; set; } = "";
+            public string webhook { get; set; } = "webhookurl";
 
             [JsonProperty("Embed Title")]
             public string Title { get; set; } = "Server Status 💫";
