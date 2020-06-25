@@ -10,7 +10,7 @@ using Oxide.Core.Libraries;
 namespace Oxide.Plugins
 {
     [Info("ServerStatus", "KR_WOLF", "1.0.0")]
-    [Description("KR_WOLF#5912")]
+    [Description("Server Status Check for discord Webhook")]
     class ServerStatus : RustPlugin
     {
         [PluginReference] private Plugin DiscordMessages;
