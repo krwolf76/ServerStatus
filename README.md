@@ -1,6 +1,10 @@
 # Server Status
 ![image](https://i.imgur.com/3tkAFFz.png")
 
+
+## Requires
+https://umod.org/plugins/discord-messages
+
 ## Config
 ```
 {
