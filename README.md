@@ -1,6 +1,7 @@
 # Server Status
+[image]!(https://i.imgur.com/3tkAFFz.png")
 
-`
+```
 {
   "Discord WebHook": "https://discordapp.com/api/webhooks/725767376754180126/q2rrDuMaGad4MgW6JrE7Hol0NODyPnanWbQhpIf7xVtepx9iAGoAEJBP4dt6eQJHABnO",
   "Embed Title": "Server Status 💫",
@@ -10,4 +11,4 @@
   "Embed Fields Time": "Time",
   "Server Status (don't change)": "online"
 }
-`
+```
