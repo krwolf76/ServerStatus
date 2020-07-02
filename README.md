@@ -1,7 +1,10 @@
 ![image](https://i.imgur.com/3tkAFFz.png") 
 
 This plugin is very easy, it checks the server status.
-
+## Command
+```
+qquit - Server Shutdown !
+```
 ## Configuration
 ```
 {
