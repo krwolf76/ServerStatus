@@ -1,12 +1,14 @@
+This plugin is very easy, it checks the server status.
+
 ![image](https://i.imgur.com/3tkAFFz.png") 
 
-This plugin is very easy, it checks the server status.
-## Command
-```
-qquit - Server Shutdown !
-```
+## Console Commands
+
+* `qquit` - Shut down server
+
 ## Configuration
-```
+
+```json
 {
   "Discord WebHook": "webhookurl",
   "Embed Title": "Server Status 💫",
