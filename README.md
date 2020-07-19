@@ -1,6 +1,6 @@
 This plugin is very easy, it checks the server status.
 
-![image](https://i.imgur.com/3tkAFFz.png") 
+![image](https://i.imgur.com/624p9Eb.png) 
 
 
 ## Configuration
