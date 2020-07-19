@@ -17,22 +17,29 @@ namespace Oxide.Plugins
         private Configuration _config;
         private object OnServerCommand(ConsoleSystem.Arg arg)
         {
-            if (arg.Args == null) return true;
+            
             if (_config.ServerStatus == true)
             {
-                if (null != arg && null != arg.cmd && null != arg.cmd.Name)
+                if(arg.cmd != null)
                 {
-                    if ("restart".Equals(arg.cmd.Name))
+                    if (arg.Args == null) return null;
+
+                    if (null != arg && null != arg.cmd && null != arg.cmd.Name)
                     {
-                        if (arg.Args[0] == "-1")
+                        if ("restart".Equals(arg.cmd.Name))
                         {
-                            SendMessage(Lang("Restart Cancel", null), Lang("Restart Cancel Descriptions", null));
-                            Puts("Cancel Restart!");
-                            return true;
+                            if (arg.Args[0] == "-1")
+                            {
+                                SendMessage(Lang("Restart Cancel", null), Lang("Restart Cancel Descriptions", null));
+                                Puts("Cancel Restart!");
+                                return true;
+                            }
+                            SendMessage(Lang("Restart", null), Lang("Restart Descriptions", null, arg.HasArgs(1) ? arg.Args[0] : "300", arg.HasArgs(2) ? arg.Args[1] : Lang("Unknown", null)));
+                            return null;
                         }
-                        SendMessage(Lang("Restart", null), Lang("Restart Descriptions", null, arg.HasArgs(1) ? arg.Args[0] : "300", arg.HasArgs(2) ? arg.Args[1] : Lang("Unknown", null)));
                     }
                 }
+                
                 
             }
             return null;
@@ -42,7 +49,7 @@ namespace Oxide.Plugins
         {
             if (_config.ServerStatus == true)
             {
-                SendMessage(Lang("Offline", null), Lang("Offline Descriptions", null));
+                SendMessage(Lang("Offline", null), Lang("Quit Descriptions", null));
                 _config.ServerStatus = false;
                 SaveConfig();
             }
