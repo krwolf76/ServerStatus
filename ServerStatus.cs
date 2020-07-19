@@ -10,57 +10,49 @@ using System.Linq;
 
 namespace Oxide.Plugins
 {
-    [Info("ServerStatus", "KR_WOLF", "1.0.5")]
+    [Info("ServerStatus", "KR_WOLF", "1.1.0")]
     [Description("Server Status Check for discord Webhook")]
     class ServerStatus : RustPlugin
     {
         private Configuration _config;
-        [ConsoleCommand("qquit")]
-        private void QuitCommand(ConsoleSystem.Arg arg)
+        private object OnServerCommand(ConsoleSystem.Arg arg)
         {
-            SendMessage(_config.Offline, _config.QuitReason);
-            timer.Once(1, () =>
+            if (arg.Args == null) return true;
+            if (_config.ServerStatus == true)
             {
-                rust.RunServerCommand($"quit {_config.QuitReason}");
-            });
-            
-        }
-        private void OnServerCommand(ConsoleSystem.Arg arg)
-        {
-            //if ( arg.Args.Length == 0 || arg.Args == null) return;
-
-            if (_config.ServerStatus == "online")
-            {
-
-                if (arg.cmd.Name == "restart")
+                if (null != arg && null != arg.cmd && null != arg.cmd.Name)
                 {
-                    if(arg.Args[0] == "-1")
+                    if ("restart".Equals(arg.cmd.Name))
                     {
-                        SendMessage(_config.Restart + $" Cancel Restart !", _config.CancelRestartReason);
-                        Puts("Cancel Restart!");
-                        return;
+                        if (arg.Args[0] == "-1")
+                        {
+                            SendMessage(Lang("Restart Cancel", null), Lang("Restart Cancel Descriptions", null));
+                            Puts("Cancel Restart!");
+                            return true;
+                        }
+                        SendMessage(Lang("Restart", null), Lang("Restart Descriptions", null, arg.HasArgs(1) ? arg.Args[0] : "300", arg.HasArgs(2) ? arg.Args[1] : Lang("Unknown", null)));
                     }
-                    SendMessage(_config.Restart + $" Restarts after {arg.Args[0]} seconds!", _config.RestartReason);
                 }
+                
             }
+            return null;
         }
 
         void OnServerShutdown()
         {
-            if (_config.ServerStatus == "online")
+            if (_config.ServerStatus == true)
             {
-                _config.ServerStatus = "offline";
+                SendMessage(Lang("Offline", null), Lang("Offline Descriptions", null));
+                _config.ServerStatus = false;
                 SaveConfig();
             }
-
         }
         private void OnServerInitialized()
         {
-            if (_config.ServerStatus == "offline")
+            if (_config.ServerStatus == false)
             {
-
-                SendMessage(_config.Online, _config.OnlineReason);
-                _config.ServerStatus = "online";
+                SendMessage(Lang("Online", null), Lang("Online Descriptions", null));
+                _config.ServerStatus = true;
                 SaveConfig();
             }
         }
@@ -82,55 +74,50 @@ namespace Oxide.Plugins
             [JsonProperty("Discord WebHook")]
             public string webhook { get; set; } = "webhookurl";
 
-            [JsonProperty("Embed Title")]
-            public string Title { get; set; } = "Server Status 💫";
-
-            [JsonProperty("Embed Fields Online")]
-            public string Online { get; set; } = "📡 Server is Online | ✅";
-
-            [JsonProperty("Embed Fields Offline")]
-            public string Offline { get; set; } = "📡 Server is Offline | ❌";
-
-            [JsonProperty("Embed Fields Restart")]
-            public string Restart { get; set; } = "📡 Server is Restart | ❌";
-
-            [JsonProperty("Embed Fields Online Reason")]
-            public string OnlineReason { get; set; } = "Server OPEN!!!";
-
-            [JsonProperty("Embed Fields Quit Reason")]
-            public string QuitReason { get; set; } = "Shutdown Save Map & Data";
-
-            [JsonProperty("Embed Fields Cancel Restart Reason")]
-            public string CancelRestartReason { get; set; } = "Cancel restart";
-
-            [JsonProperty("Embed Fields Restart Reason")]
-            public string RestartReason { get; set; } = "Restarting Server";
-
-            [JsonProperty("Embed Fields Status")]
-            public string Status { get; set; } = "Status";
-
-            [JsonProperty("Embed Fields Time")]
-            public string Time { get; set; } = "Time";
-
             [JsonProperty("Embed Fields Time Format")]
             public string TimeFormat { get; set; } = "MM/dd/yy HH:mm:ss";
 
-            [JsonProperty("Embed Fields Reason")]
-            public string Reason { get; set; } = "Reason";
-
             [JsonProperty("Server Status (don't change)")]
-            public string ServerStatus { get; set; } = "offline";
+            public bool ServerStatus { get; set; } = false;
         }
         #endregion
+        #region Lang
+        protected override void LoadDefaultMessages()
+        {
+            lang.RegisterMessages(new Dictionary<string, string>
+            {
+                ["Title"] = "Server Status 💫",
+                ["Online"] = "📡 Server is online | ✅",
+                ["Quit"] = "📡 Server is offline | ❌",
+                ["Restart"] = "📡 The server has started restarting | ⏳",
+                ["Restart Cancel"] = "📡 The server has canceled the restart | ⏳",
+                ["Time"] = "Time:",
+                ["Descriptions"] = "Descriptions:",
+                ["Online Descriptions"] = "🎈 Server is Online",
+                ["Quit Descriptions"] = "🎈 Server is Offline",
+                ["Restart Descriptions"] = "🎈 The server shuts down after {0} seconds.\n\n🎈 Reason: {1}",
+                ["Restart Cancel Descriptions"] = "🎈 Server is Cancel Restart",
+                ["Unknown"] = "Unknown"
 
+            }, this, "en");
+            lang.RegisterMessages(new Dictionary<string, string>
+            {
+                [""] = "서버 상태 💫",
+            }, this, "kr");
+        }
+
+        private string Lang(string key, string id = null, params object[] args)
+        {
+            return string.Format(lang.GetMessage(key, this, id), args);
+        }
+        #endregion
         #region Discord
         private void SendMessage(string status, string reason)
         {
-
             var embed = new Embed()
-                .AddField(_config.Status, status, true)
-                .AddField(_config.Time, $"{DateTime.Now.ToString(_config.TimeFormat)}", false)
-                .AddField(_config.Reason, reason, false);
+                .AddField(Lang("Title"), status, true)
+                .AddField(Lang("Time"), $"{DateTime.Now.ToString(_config.TimeFormat)}", false)
+                .AddField(Lang("Descriptions"), reason, false);
 
             webrequest.Enqueue(_config.webhook, new DiscordMessage("", embed).ToJson(), (code, response) => {
             }, this, RequestMethod.POST, new Dictionary<string, string>() {
@@ -142,7 +129,7 @@ namespace Oxide.Plugins
         {
             public DiscordMessage(string content, params Embed[] embeds)
             {
-                Content = content;
+                Content = "@everyone" + content;
                 Embeds = embeds.ToList();
             }
 
