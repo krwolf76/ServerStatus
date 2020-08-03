@@ -2,7 +2,6 @@ This plugin is very easy, it checks the server status.
 
 ![image](https://i.imgur.com/624p9Eb.png) 
 
-
 ## Configuration
 
 ```json
@@ -12,7 +11,9 @@ This plugin is very easy, it checks the server status.
   "Server Status (don't change)": false
 }
 ```
-## Lang
+
+## Localization
+
 ```json
 {
   "Title": "Server Status 💫",
