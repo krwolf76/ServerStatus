@@ -12,7 +12,7 @@ using Oxide.Game.Rust.Libraries;
 
 namespace Oxide.Plugins
 {
-    [Info("Server Status", "KR_WOLF", "1.1.1")]
+    [Info("Server Status", "KR_WOLF", "1.1.15")]
     [Description("Server Status Check for discord Webhook")]
     class ServerStatus : RustPlugin
     {
@@ -30,11 +30,16 @@ namespace Oxide.Plugins
                     {
                         if ("restart".Equals(arg.cmd.Name))
                         {
+                            if (arg.Args[0] == null)
+                            {
+                                PrintWarning("Please enter seconds.");
+                                return null;
+                            }
                             if (arg.Args[0] == "-1")
                             {
                                 SendMessage(Lang("Restart Cancel", null), Lang("Restart Cancel Descriptions", null));
                                 Puts("Cancel Restart!");
-                                return true;
+                                return false;
                             }
                             SendMessage(Lang("Restart", null), Lang("Restart Descriptions", null, arg.HasArgs(1) ? arg.Args[0] : "300", arg.HasArgs(2) ? arg.Args[1] : Lang("Unknown", null)));
                             return null;
@@ -91,6 +96,9 @@ namespace Oxide.Plugins
 
             [JsonProperty("Embed Fields Time Format")]
             public string TimeFormat { get; set; } = "MM/dd/yyyy HH:mm:ss";
+
+            [JsonProperty("@everyone Mention Disable")]
+            public bool EveryoneMention { get; set; } = false;
         }
         #endregion
         #region Lang
@@ -141,18 +149,29 @@ namespace Oxide.Plugins
                 .AddField(Lang("Title", null, ConVar.Server.hostname), status, true)
                 .AddField(Lang("Time"), $"{DateTime.Now.ToString(_config.TimeFormat)}", false)
                 .AddField(Lang("Descriptions"), reason, false);
-
-            webrequest.Enqueue(_config.webhook, new DiscordMessage("", embed).ToJson(), (code, response) => {
-            }, this, RequestMethod.POST, new Dictionary<string, string>() {
+            if(_config.EveryoneMention == false)
+            {
+                webrequest.Enqueue(_config.webhook, new DiscordMessage("@everyone", embed).ToJson(), (code, response) => {
+                }, this, RequestMethod.POST, new Dictionary<string, string>() {
                 { "Content-Type", "application/json" }
-            });
+                });
+            }
+            else
+            {
+                webrequest.Enqueue(_config.webhook, new DiscordMessage("", embed).ToJson(), (code, response) => {
+                }, this, RequestMethod.POST, new Dictionary<string, string>() {
+                { "Content-Type", "application/json" }
+                });
+            }
+            
         }
 
         private class DiscordMessage
         {
+            
             public DiscordMessage(string content, params Embed[] embeds)
             {
-                Content = "@everyone" + content;
+                Content = "" + content;
                 Embeds = embeds.ToList();
             }
 
