@@ -7,22 +7,24 @@ using Oxide.Core.Libraries.Covalence;
 using Oxide.Core.Plugins;
 using Oxide.Core.Libraries;
 using System.Linq;
+using ConVar;
+using Oxide.Game.Rust.Libraries;
 
 namespace Oxide.Plugins
 {
-    [Info("ServerStatus", "KR_WOLF", "1.1.0")]
+    [Info("Server Status", "KR_WOLF", "1.1.1")]
     [Description("Server Status Check for discord Webhook")]
     class ServerStatus : RustPlugin
     {
         private Configuration _config;
+        private string status = "offline";
         private object OnServerCommand(ConsoleSystem.Arg arg)
         {
             
-            if (_config.ServerStatus == true)
+            if (status == "online")
             {
                 if(arg.cmd != null)
                 {
-                    if (arg.Args == null) return null;
 
                     if (null != arg && null != arg.cmd && null != arg.cmd.Name)
                     {
@@ -47,19 +49,25 @@ namespace Oxide.Plugins
 
         void OnServerShutdown()
         {
-            if (_config.ServerStatus == true)
+            if (status == "online")
             {
-                SendMessage(Lang("Offline", null), Lang("Quit Descriptions", null));
-                _config.ServerStatus = false;
+                SendMessage(Lang("Quit", null), Lang("Quit Descriptions", null));
+                status = "offline";
                 SaveConfig();
             }
         }
         private void OnServerInitialized()
         {
-            if (_config.ServerStatus == false)
+            if (_config.webhook == "webhookurl" || _config.webhook == null || _config.webhook == string.Empty)
+            {
+                PrintWarning("Change WebHook URL");
+                return;
+            }
+
+            if (status == "offline")
             {
                 SendMessage(Lang("Online", null), Lang("Online Descriptions", null));
-                _config.ServerStatus = true;
+                status = "online";
                 SaveConfig();
             }
         }
@@ -82,10 +90,7 @@ namespace Oxide.Plugins
             public string webhook { get; set; } = "webhookurl";
 
             [JsonProperty("Embed Fields Time Format")]
-            public string TimeFormat { get; set; } = "MM/dd/yy HH:mm:ss";
-
-            [JsonProperty("Server Status (don't change)")]
-            public bool ServerStatus { get; set; } = false;
+            public string TimeFormat { get; set; } = "MM/dd/yyyy HH:mm:ss";
         }
         #endregion
         #region Lang
@@ -109,7 +114,18 @@ namespace Oxide.Plugins
             }, this, "en");
             lang.RegisterMessages(new Dictionary<string, string>
             {
-                [""] = "서버 상태 💫",
+                ["Title"] = "서버 상태 💫",
+                ["Online"] = "📡 서버 시작 | ✅",
+                ["Quit"] = "📡 서버 중지. | ❌",
+                ["Restart"] = "📡 서버 재시작 | ⏳",
+                ["Restart Cancel"] = "📡 재시작 취소| ⏳",
+                ["Time"] = "시간:",
+                ["Descriptions"] = "설명:",
+                ["Online Descriptions"] = "🎈 서버가 시작되었습니다.",
+                ["Quit Descriptions"] = "🎈 서버가 중지되었습니다.",
+                ["Restart Descriptions"] = "🎈 서버가  {0} 초 후에 재시작 됩니다.\n\n🎈 이유: {1}",
+                ["Restart Cancel Descriptions"] = "🎈 서버 재시작이 취소되었습니다.",
+                ["Unknown"] = "알수없음"
             }, this, "kr");
         }
 
@@ -122,7 +138,7 @@ namespace Oxide.Plugins
         private void SendMessage(string status, string reason)
         {
             var embed = new Embed()
-                .AddField(Lang("Title"), status, true)
+                .AddField(Lang("Title", null, ConVar.Server.hostname), status, true)
                 .AddField(Lang("Time"), $"{DateTime.Now.ToString(_config.TimeFormat)}", false)
                 .AddField(Lang("Descriptions"), reason, false);
 
