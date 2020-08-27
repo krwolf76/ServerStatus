@@ -12,54 +12,42 @@ using Oxide.Game.Rust.Libraries;
 
 namespace Oxide.Plugins
 {
-    [Info("Server Status", "KR_WOLF", "1.1.15")]
+    [Info("Server Status", "KR_WOLF", "1.1.2")]
     [Description("Server Status Check for discord Webhook")]
     class ServerStatus : RustPlugin
     {
         private Configuration _config;
-        private string status = "offline";
         private object OnServerCommand(ConsoleSystem.Arg arg)
         {
-            
-            if (status == "online")
+            if(arg.cmd != null)
             {
-                if(arg.cmd != null)
+                if (null != arg && null != arg.cmd && null != arg.cmd.Name)
                 {
-
-                    if (null != arg && null != arg.cmd && null != arg.cmd.Name)
+                    if ("restart".Equals(arg.cmd.Name))
                     {
-                        if ("restart".Equals(arg.cmd.Name))
+                        
+                        if (arg.Args == null)
                         {
-                            if (arg.Args[0] == null)
-                            {
-                                PrintWarning("Please enter seconds.");
-                                return null;
-                            }
-                            if (arg.Args[0] == "-1")
-                            {
-                                SendMessage(Lang("Restart Cancel", null), Lang("Restart Cancel Descriptions", null));
-                                Puts("Cancel Restart!");
-                                return false;
-                            }
-                            SendMessage(Lang("Restart", null), Lang("Restart Descriptions", null, arg.HasArgs(1) ? arg.Args[0] : "300", arg.HasArgs(2) ? arg.Args[1] : Lang("Unknown", null)));
+                            PrintWarning("Please enter seconds.");
+                            return true;
+                        }
+                        if (arg.Args[0] == "-1")
+                        {
+                            SendMessage(Lang("Restart Cancel"), Lang("Restart Cancel Descriptions"));
+                            Puts("Cancel Restart!");
                             return null;
                         }
+                        SendMessage(Lang("Restart"), Lang("Restart Descriptions", null, arg.HasArgs(1) ? arg.Args[0] : "300", arg.HasArgs(2) ? arg.Args[1] : Lang("Unknown")));
+                        return null;
                     }
                 }
-                
-                
             }
-            return null;
+            return true;
         }
 
         void OnServerShutdown()
         {
-            if (status == "online")
-            {
-                SendMessage(Lang("Quit", null), Lang("Quit Descriptions", null));
-                status = "offline";
-                SaveConfig();
-            }
+            SendMessage(Lang("Quit"), Lang("Quit Descriptions"));
         }
         private void OnServerInitialized()
         {
@@ -69,12 +57,7 @@ namespace Oxide.Plugins
                 return;
             }
 
-            if (status == "offline")
-            {
-                SendMessage(Lang("Online", null), Lang("Online Descriptions", null));
-                status = "online";
-                SaveConfig();
-            }
+            SendMessage(Lang("Online"), Lang("Online Descriptions"));
         }
 
         #region Config
@@ -97,7 +80,7 @@ namespace Oxide.Plugins
             [JsonProperty("Embed Fields Time Format")]
             public string TimeFormat { get; set; } = "MM/dd/yyyy HH:mm:ss";
 
-            [JsonProperty("@everyone Mention Disable")]
+            [JsonProperty("everyone Mention Disable")]
             public bool EveryoneMention { get; set; } = false;
         }
         #endregion
@@ -149,6 +132,7 @@ namespace Oxide.Plugins
                 .AddField(Lang("Title", null, ConVar.Server.hostname), status, true)
                 .AddField(Lang("Time"), $"{DateTime.Now.ToString(_config.TimeFormat)}", false)
                 .AddField(Lang("Descriptions"), reason, false);
+
             if(_config.EveryoneMention == false)
             {
                 webrequest.Enqueue(_config.webhook, new DiscordMessage("@everyone", embed).ToJson(), (code, response) => {
