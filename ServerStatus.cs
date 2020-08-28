@@ -12,37 +12,35 @@ using Oxide.Game.Rust.Libraries;
 
 namespace Oxide.Plugins
 {
-    [Info("Server Status", "KR_WOLF", "1.1.2")]
+    [Info("Server Status", "KR_WOLF", "1.1.25")]
     [Description("Server Status Check for discord Webhook")]
     class ServerStatus : RustPlugin
     {
         private Configuration _config;
-        private object OnServerCommand(ConsoleSystem.Arg arg)
+        private void OnServerCommand(ConsoleSystem.Arg arg)
         {
-            if(arg.cmd != null)
+            if (arg.cmd != null)
             {
                 if (null != arg && null != arg.cmd && null != arg.cmd.Name)
                 {
-                    if ("restart".Equals(arg.cmd.Name))
+                    if (arg.cmd.Name.Equals("restart"))
                     {
-                        
                         if (arg.Args == null)
                         {
-                            PrintWarning("Please enter seconds.");
-                            return true;
+                            SendMessage(Lang("Restart"), Lang("Restart Descriptions", null, arg.HasArgs(1) ? arg.Args[0] : "300", arg.HasArgs(2) ? arg.Args[1] : Lang("Unknown")));
+                            return;
                         }
-                        if (arg.Args[0] == "-1")
+                        if (arg.Args.Length == 1 && arg.Args[0] == "-1")
                         {
                             SendMessage(Lang("Restart Cancel"), Lang("Restart Cancel Descriptions"));
                             Puts("Cancel Restart!");
-                            return null;
+                            return;
                         }
+
                         SendMessage(Lang("Restart"), Lang("Restart Descriptions", null, arg.HasArgs(1) ? arg.Args[0] : "300", arg.HasArgs(2) ? arg.Args[1] : Lang("Unknown")));
-                        return null;
                     }
                 }
             }
-            return true;
         }
 
         void OnServerShutdown()
