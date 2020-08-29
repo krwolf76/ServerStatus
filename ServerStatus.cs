@@ -12,41 +12,73 @@ using Oxide.Game.Rust.Libraries;
 
 namespace Oxide.Plugins
 {
-    [Info("Server Status", "KR_WOLF", "1.1.25")]
+    [Info("Server Status", "KR_WOLF", "1.1.5")]
     [Description("Server Status Check for discord Webhook")]
     class ServerStatus : RustPlugin
     {
         private Configuration _config;
-        private void OnServerCommand(ConsoleSystem.Arg arg)
+
+        private bool isQuit = false;
+        private object OnServerCommand(ConsoleSystem.Arg arg)
         {
-            if (arg.cmd != null)
+            if (null != arg)
             {
-                if (null != arg && null != arg.cmd && null != arg.cmd.Name)
+                string commandName = arg.cmd.Name;
+                string[] args = arg.Args;
+
+                if (null == commandName) return null;
+                if ("restart".Equals(commandName))
                 {
-                    if (arg.cmd.Name.Equals("restart"))
+                    string time = "300";
+                    string reason = "Unknown";
+                    if (null != args)
                     {
-                        if (arg.Args == null)
-                        {
-                            SendMessage(Lang("Restart"), Lang("Restart Descriptions", null, arg.HasArgs(1) ? arg.Args[0] : "300", arg.HasArgs(2) ? arg.Args[1] : Lang("Unknown")));
-                            return;
-                        }
-                        if (arg.Args.Length == 1 && arg.Args[0] == "-1")
+                        if ("-1".Equals(args[0]))
                         {
                             SendMessage(Lang("Restart Cancel"), Lang("Restart Cancel Descriptions"));
-                            Puts("Cancel Restart!");
-                            return;
+                            Puts("Restart has been cancelled.");
+                            return null;
                         }
+                        else
+                        {
+                            if (2 <= args.Length)
+                            {
+                                time = args[0];
+                                reason = "";
+                                for (int i = 1; i < args.Length; i++)
+                                {
+                                    reason += args[i];
+                                    if (i < args.Length - 1) reason += " ";
+                                }
+                            }
+                            else
+                            {
+                                time = args[0];
+                            }
+                        }
+                    }
 
-                        SendMessage(Lang("Restart"), Lang("Restart Descriptions", null, arg.HasArgs(1) ? arg.Args[0] : "300", arg.HasArgs(2) ? arg.Args[1] : Lang("Unknown")));
+                    SendMessage(Lang("Restart"), Lang("Restart Descriptions", time, reason));
+                }
+                if ("quit".Equals(commandName))
+                {
+                    timer.Once(3f, () =>
+                    {
+                        isQuit = true;
+                        Server.Command("quit");
+                    });
+
+                    if (!isQuit)
+                    {
+                        SendMessage(Lang("Quit"), Lang("Quit Descriptions"));
+                        return isQuit;
                     }
                 }
             }
+
+            return null;
         }
 
-        void OnServerShutdown()
-        {
-            SendMessage(Lang("Quit"), Lang("Quit Descriptions"));
-        }
         private void OnServerInitialized()
         {
             if (_config.webhook == "webhookurl" || _config.webhook == null || _config.webhook == string.Empty)
@@ -118,18 +150,18 @@ namespace Oxide.Plugins
             }, this, "kr");
         }
 
-        private string Lang(string key, string id = null, params object[] args)
+        private string Lang(string key, params object[] args)
         {
-            return string.Format(lang.GetMessage(key, this, id), args);
+            return string.Format(lang.GetMessage(key, this), args);
         }
         #endregion
         #region Discord
         private void SendMessage(string status, string reason)
         {
             var embed = new Embed()
-                .AddField(Lang("Title", null, ConVar.Server.hostname), status, true)
+                .AddField(Lang("Title", ConVar.Server.hostname), status, true)
                 .AddField(Lang("Time"), $"{DateTime.Now.ToString(_config.TimeFormat)}", false)
-                .AddField(Lang("Descriptions"), reason, false);
+                .AddField(Lang("Descriptions", ConVar.Server.ip), reason, false);
 
             if(_config.EveryoneMention == false)
             {
