@@ -12,7 +12,7 @@ using Oxide.Game.Rust.Libraries;
 
 namespace Oxide.Plugins
 {
-    [Info("Server Status", "KR_WOLF", "1.1.5")]
+    [Info("Server Status", "UNKN0WN", "1.2.01")]
     [Description("Server Status Check for discord Webhook")]
     class ServerStatus : RustPlugin
     {
@@ -110,8 +110,11 @@ namespace Oxide.Plugins
             [JsonProperty("Embed Fields Time Format")]
             public string TimeFormat { get; set; } = "MM/dd/yyyy HH:mm:ss";
 
-            [JsonProperty("everyone Mention Disable")]
-            public bool EveryoneMention { get; set; } = false;
+            [JsonProperty("Selection Mention (0 - none | 1 - @here | 2 - @everyone | 3 - @something)")]
+            public int SelectionMention { get; set; } = 0;
+
+            [JsonProperty("Designated mention")]
+            public string DesignatedMention = "@something";
         }
         #endregion
         #region Lang
@@ -163,16 +166,30 @@ namespace Oxide.Plugins
                 .AddField(Lang("Time"), $"{DateTime.Now.ToString(_config.TimeFormat)}", false)
                 .AddField(Lang("Descriptions", ConVar.Server.ip), reason, false);
 
-            if(_config.EveryoneMention == false)
+            if(_config.SelectionMention == 0)
+            {
+                webrequest.Enqueue(_config.webhook, new DiscordMessage("", embed).ToJson(), (code, response) => {
+                }, this, RequestMethod.POST, new Dictionary<string, string>() {
+                { "Content-Type", "application/json" }
+                });
+            }
+            else if (_config.SelectionMention == 1)
+            {
+                webrequest.Enqueue(_config.webhook, new DiscordMessage("@here", embed).ToJson(), (code, response) => {
+                }, this, RequestMethod.POST, new Dictionary<string, string>() {
+                { "Content-Type", "application/json" }
+                });
+            }
+            else if (_config.SelectionMention == 2)
             {
                 webrequest.Enqueue(_config.webhook, new DiscordMessage("@everyone", embed).ToJson(), (code, response) => {
                 }, this, RequestMethod.POST, new Dictionary<string, string>() {
                 { "Content-Type", "application/json" }
                 });
             }
-            else
+            else if (_config.SelectionMention == 3)
             {
-                webrequest.Enqueue(_config.webhook, new DiscordMessage("", embed).ToJson(), (code, response) => {
+                webrequest.Enqueue(_config.webhook, new DiscordMessage($"{_config.DesignatedMention}", embed).ToJson(), (code, response) => {
                 }, this, RequestMethod.POST, new Dictionary<string, string>() {
                 { "Content-Type", "application/json" }
                 });
