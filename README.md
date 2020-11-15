@@ -8,7 +8,8 @@ This plugin is very easy, it checks the server status.
 {
   "Discord WebHook": "webhookurl",
   "Time Format": "MM/dd/yy HH:mm:ss",
-  "@everyone Mention Disable": true
+  "Selection Mention (0 - none | 1 - @here | 2 - @everyone | 3 - @something)": 0,
+  "Designated mention": "@something"
 }
 ```
 
