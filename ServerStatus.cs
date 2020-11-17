@@ -12,13 +12,15 @@ using Oxide.Game.Rust.Libraries;
 
 namespace Oxide.Plugins
 {
-    [Info("Server Status", "UNKN0WN", "1.2.01")]
+    [Info("Server Status", "UNKN0WN", "1.2.5")]
     [Description("Server Status Check for discord Webhook")]
     class ServerStatus : RustPlugin
     {
         private Configuration _config;
-
+        [PluginReference] Plugin SmoothRestart;
         private bool isQuit = false;
+        private bool isSR = false;
+
         private object OnServerCommand(ConsoleSystem.Arg arg)
         {
             if (null != arg)
@@ -27,39 +29,80 @@ namespace Oxide.Plugins
                 string[] args = arg.Args;
 
                 if (null == commandName) return null;
-                if ("restart".Equals(commandName))
+                if(isSR == true)
                 {
-                    string time = "300";
-                    string reason = "Unknown";
-                    if (null != args)
+                    if("sr.restart".Equals(commandName))
                     {
-                        if ("-1".Equals(args[0]))
+                        string time = "300";
+                        string reason = "Unknown";
+                        if (null != args)
                         {
-                            SendMessage(Lang("Restart Cancel"), Lang("Restart Cancel Descriptions"));
-                            Puts("Restart has been cancelled.");
-                            return null;
-                        }
-                        else
-                        {
-                            if (2 <= args.Length)
+                            if("stop".Equals(args[0]))
                             {
-                                time = args[0];
-                                reason = "";
-                                for (int i = 1; i < args.Length; i++)
-                                {
-                                    reason += args[i];
-                                    if (i < args.Length - 1) reason += " ";
-                                }
+                                SendMessage(Lang("Restart Cancel"), Lang("Restart Cancel Descriptions"));
+                                Puts("Restart has been cancelled.");
+                                return null;
                             }
                             else
                             {
-                                time = args[0];
+                                if (2 <= args.Length)
+                                {
+                                    time = args[0];
+                                    reason = "";
+                                    for (int i = 1; i < args.Length; i++)
+                                    {
+                                        reason += args[i];
+                                        if (i < args.Length - 1) reason += " ";
+                                    }
+                                }
+                                else
+                                {
+                                    time = args[0];
+                                }
                             }
                         }
-                    }
 
-                    SendMessage(Lang("Restart"), Lang("Restart Descriptions", time, reason));
+
+                        SendMessage(Lang("Restart"), Lang("Restart Descriptions", time, reason));
+                    }
                 }
+                if(isSR == false)
+                {
+                    if ("restart".Equals(commandName))
+                    {
+                        string time = "300";
+                        string reason = "Unknown";
+                        if (null != args)
+                        {
+                            if ("-1".Equals(args[0]))
+                            {
+                                SendMessage(Lang("Restart Cancel"), Lang("Restart Cancel Descriptions"));
+                                Puts("Restart has been cancelled.");
+                                return null;
+                            }
+                            else
+                            {
+                                if (2 <= args.Length)
+                                {
+                                    time = args[0];
+                                    reason = "";
+                                    for (int i = 1; i < args.Length; i++)
+                                    {
+                                        reason += args[i];
+                                        if (i < args.Length - 1) reason += " ";
+                                    }
+                                }
+                                else
+                                {
+                                    time = args[0];
+                                }
+                            }
+                        }
+
+                        SendMessage(Lang("Restart"), Lang("Restart Descriptions", time, reason));
+                    }
+                }
+                
                 if ("quit".Equals(commandName))
                 {
                     timer.Once(3f, () =>
@@ -85,6 +128,12 @@ namespace Oxide.Plugins
             {
                 PrintWarning("Change WebHook URL");
                 return;
+            }
+
+            if(SmoothRestart != null)
+            {
+                isSR = true;
+                PrintWarning("SmoothRestart Plugins Allowed");
             }
 
             SendMessage(Lang("Online"), Lang("Online Descriptions"));
