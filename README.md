@@ -17,7 +17,7 @@ This plugin is very easy, it checks the server status.
 
 ```json
 {
-  "Title": "Server Status 💫",
+  "Title": "Server Status 💫", (options : {hostname} {ip} {port} {online} {maxplayers}) 
   "Online": "📡 Server is online | ✅",
   "Quit": "📡 Server is offline | ❌",
   "Restart": "📡 The server has started restarting | ⏳",
@@ -26,7 +26,7 @@ This plugin is very easy, it checks the server status.
   "Descriptions": "Descriptions:",
   "Online Descriptions": "🎈 Server is Online",
   "Quit Descriptions": "🎈 Server is Offline",
-  "Restart Descriptions": "🎈 The server shuts down after {0} seconds.\n\n🎈 Reason: {1}",
+  "Restart Descriptions": "🎈 The server shuts down after {time} seconds.\n\n🎈 Reason: {reason}",
   "Restart Cancel Descriptions": "🎈 Server is Cancel Restart",
   "Unknown": "Unknown"
 }
