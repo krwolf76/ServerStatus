@@ -12,7 +12,7 @@ using Oxide.Game.Rust.Libraries;
 
 namespace Oxide.Plugins
 {
-    [Info("Server Status", "UNKN0WN", "1.2.5")]
+    [Info("Server Status", "UNKN0WN", "1.3.0")]
     [Description("Server Status Check for discord Webhook")]
     class ServerStatus : RustPlugin
     {
@@ -62,8 +62,12 @@ namespace Oxide.Plugins
                             }
                         }
 
-
-                        SendMessage(Lang("Restart"), Lang("Restart Descriptions", time, reason));
+                        var list = new Dictionary<string, string>
+                        {
+                            { "time", time },
+                            { "reason", reason }
+                        };
+                        SendMessage(Lang("Restart"), Lang("Restart Descriptions", list));
                     }
                 }
                 if(isSR == false)
@@ -98,8 +102,12 @@ namespace Oxide.Plugins
                                 }
                             }
                         }
-
-                        SendMessage(Lang("Restart"), Lang("Restart Descriptions", time, reason));
+                        var list = new Dictionary<string, string>
+                        {
+                            { "time", time },
+                            { "reason", reason }
+                        };
+                        SendMessage(Lang("Restart"), Lang("Restart Descriptions", list));
                     }
                 }
                 
@@ -180,7 +188,7 @@ namespace Oxide.Plugins
                 ["Descriptions"] = "Descriptions:",
                 ["Online Descriptions"] = "🎈 Server is Online",
                 ["Quit Descriptions"] = "🎈 Server is Offline",
-                ["Restart Descriptions"] = "🎈 The server shuts down after {0} seconds.\n\n🎈 Reason: {1}",
+                ["Restart Descriptions"] = "🎈 The server shuts down after {time} seconds.\n\n🎈 Reason: {reason}",
                 ["Restart Cancel Descriptions"] = "🎈 Server is Cancel Restart",
                 ["Unknown"] = "Unknown"
 
@@ -196,24 +204,46 @@ namespace Oxide.Plugins
                 ["Descriptions"] = "설명:",
                 ["Online Descriptions"] = "🎈 서버가 시작되었습니다.",
                 ["Quit Descriptions"] = "🎈 서버가 중지되었습니다.",
-                ["Restart Descriptions"] = "🎈 서버가  {0} 초 후에 재시작 됩니다.\n\n🎈 이유: {1}",
+                ["Restart Descriptions"] = "🎈 서버가  {time} 초 후에 재시작 됩니다.\n\n🎈 이유: {reason}",
                 ["Restart Cancel Descriptions"] = "🎈 서버 재시작이 취소되었습니다.",
                 ["Unknown"] = "알수없음"
             }, this, "kr");
         }
 
-        private string Lang(string key, params object[] args)
+        private string Lang(string key, Dictionary<string, string> args = null)
         {
-            return string.Format(lang.GetMessage(key, this), args);
+            if (string.IsNullOrEmpty(key))
+                return string.Empty;
+
+            key = lang.GetMessage(key, this);
+
+            if (args != null)
+            {
+                foreach (var lekey in args)
+                {
+                    if (key.Contains("{" + lekey.Key + "}"))
+                        key = key.Replace("{" + lekey.Key + "}", lekey.Value);
+                }
+            }
+
+            return key;
         }
         #endregion
         #region Discord
         private void SendMessage(string status, string reason)
         {
+            var list = new Dictionary<string, string>
+            {
+                { "hostname", ConVar.Server.hostname },
+                { "ip", ConVar.Server.ip },
+                { "port", ConVar.Server.port.ToString() },
+                { "online", BasePlayer.activePlayerList.Count.ToString() },
+                { "maxplayers", ConVar.Server.maxplayers.ToString() }
+            };
             var embed = new Embed()
-                .AddField(Lang("Title", ConVar.Server.hostname), status, true)
+                .AddField(Lang("Title", list), status, true)
                 .AddField(Lang("Time"), $"{DateTime.Now.ToString(_config.TimeFormat)}", false)
-                .AddField(Lang("Descriptions", ConVar.Server.ip), reason, false);
+                .AddField(Lang("Descriptions", list), reason, false);
 
             if(_config.SelectionMention == 0)
             {
